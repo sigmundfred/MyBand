@@ -18,7 +18,6 @@ TrackLibrary::TrackLibrary()
     {
         juce::Logger::writeToLog("Library loading");
         LoadLibrary(_file);
-        juce::Logger::writeToLog("Library loading");
     }
     else
     {

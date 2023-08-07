@@ -54,16 +54,6 @@ private:
     double getCurrentPositionTransportSources();
     
     //==========================================================================
-    juce::TextButton openButton;
-    juce::TextButton playButton;
-    juce::TextButton stopButton;
-    juce::ToggleButton loopingToggle;
-    juce::Label currentPositionLabel;
-    juce::Label song1;
-    juce::Label song2;
-
-    std::unique_ptr<juce::FileChooser> chooser;
-
     juce::AudioFormatManager formatManager;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource2;

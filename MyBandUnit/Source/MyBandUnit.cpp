@@ -13,33 +13,6 @@
 MyBandUnit::MyBandUnit()
         : state (Stopped)
     {
-        
-        addAndMakeVisible (&openButton);
-        openButton.setButtonText ("Open...");
-        openButton.onClick = [this] { openButtonClicked(); };
-
-        addAndMakeVisible (&playButton);
-        playButton.setButtonText ("Play");
-        playButton.onClick = [this] { playButtonClicked(); };
-        playButton.setColour (juce::TextButton::buttonColourId, juce::Colours::green);
-        playButton.setEnabled (false);
-
-        addAndMakeVisible (&stopButton);
-        stopButton.setButtonText ("Stop");
-        stopButton.onClick = [this] { stopButtonClicked(); };
-        stopButton.setColour (juce::TextButton::buttonColourId, juce::Colours::red);
-        stopButton.setEnabled (false);
-
-        addAndMakeVisible (&loopingToggle);
-        loopingToggle.setButtonText ("Loop");
-        loopingToggle.onClick = [this] { loopButtonChanged(); };
-
-        addAndMakeVisible (&currentPositionLabel);
-        currentPositionLabel.setText ("Stopped", juce::dontSendNotification);
-        addAndMakeVisible (&song1);
-        song1.setText("None", juce::dontSendNotification);
-        addAndMakeVisible (&song2);
-        song2.setText("None", juce::dontSendNotification);
 
         setSize (640, 480);
 
@@ -76,13 +49,9 @@ void MyBandUnit::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
         mixSource.releaseResources();
     }
 
+
     void MyBandUnit::resized()
     {
-        openButton          .setBounds (10, 10,  getWidth() - 20, 20);
-        playButton          .setBounds (10, 40,  getWidth() - 20, 20);
-        stopButton          .setBounds (10, 70,  getWidth() - 20, 20);
-        loopingToggle       .setBounds (10, 100, getWidth() - 20, 20);
-        currentPositionLabel.setBounds (10, 130, getWidth() - 20, 20);
     }
 
     void MyBandUnit::changeListenerCallback (juce::ChangeBroadcaster* source)
@@ -108,11 +77,9 @@ void MyBandUnit::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 
             auto positionString = juce::String::formatted ("%02d:%02d:%03d", minutes, seconds, millis);
 
-            currentPositionLabel.setText (positionString, juce::dontSendNotification);
         }
         else
         {
-            currentPositionLabel.setText ("Stopped", juce::dontSendNotification);
         }
     }
 
@@ -136,18 +103,14 @@ void MyBandUnit::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
             switch (state)
             {
                 case Stopped:
-                    stopButton.setEnabled (false);
-                    playButton.setEnabled (true);
                     setPositionTransportSources(0.0);
                     break;
 
                 case Starting:
-                    playButton.setEnabled (false);
                     start();
                     break;
 
                 case Playing:
-                    stopButton.setEnabled (true);
                     break;
 
                 case Stopping:
@@ -159,18 +122,8 @@ void MyBandUnit::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 
     void MyBandUnit::openButtonClicked()
     {
-        chooser = std::make_unique<juce::FileChooser> ("Select a Wave file to play...",
-                                                       juce::File{},
-                                                       "*.wav");
-        auto chooserFlags = juce::FileBrowserComponent::openMode
-        //                  | juce::FileBrowserComponent::canSelectFiles;
-        | juce::FileBrowserComponent::canSelectDirectories;
-
-        //chooser->launchAsync (chooserFlags, [this] (const juce::FileChooser& fc)
-        chooser->launchAsync (chooserFlags, [this] (const juce::FileChooser& fc)
-         {
-            auto dir = fc.getResult();
-            juce::Array<juce::File> list = dir.findChildFiles(2, false, "*.wav");
+            File* dir = new File(File::getCurrentWorkingDirectory().getChildFile("library/1"));
+            juce::Array<juce::File> list = dir->findChildFiles(2, false, "*.wav");
             
             for (int i=0; i<list.size(); i++)
             {
@@ -189,7 +142,6 @@ void MyBandUnit::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
                     readerSources.add(newSource.release());
                 }
             }
-            playButton.setEnabled (true); // verifier taille liste d'abord
             
             /*
             if (file != juce::File{})
@@ -205,12 +157,10 @@ void MyBandUnit::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
                     readerSource.reset (newSource.release());
                 }
             }*/
-        });
     }
 
     void MyBandUnit::playButtonClicked()
     {
-        updateLoopState (loopingToggle.getToggleState());
         changeState (Starting);
     }
 
@@ -221,7 +171,6 @@ void MyBandUnit::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 
     void MyBandUnit::loopButtonChanged()
     {
-        updateLoopState (loopingToggle.getToggleState());
     }
 
     bool MyBandUnit::checkReaderSources()
