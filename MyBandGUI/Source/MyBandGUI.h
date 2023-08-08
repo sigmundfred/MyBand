@@ -10,10 +10,12 @@
 
 #pragma once
 #include "JuceHeader.h"
+#include "LibraryWindow.h"
+#include "../../Common/TrackLibrary.h"
 using namespace juce;
 
 //==============================================================================
-class MyBandGUI   : public juce::AudioAppComponent,public juce::ChangeListener,public juce::Timer
+class MyBandGUI   : public juce::AudioAppComponent,public juce::ChangeListener,public juce::Timer, public InterprocessConnection
 {
 public:
     MyBandGUI();
@@ -27,6 +29,12 @@ public:
     void timerCallback() override;
     void updateLoopState (bool shouldLoop);
     void start();
+    
+    void ConnectToUnit(const String &hostName, int portNumber, int timeOutMillisecs);
+    // heritage InterporcessConnection
+    void connectionMade() override;
+    void connectionLost() override;
+    void messageReceived (const MemoryBlock &message) override;
 
 private:
     enum TransportState
@@ -38,7 +46,7 @@ private:
     };
 
     void changeState (TransportState newState);
-    void openButtonClicked();
+    void libraryButtonClicked();
     void playButtonClicked();
     void stopButtonClicked();
     void loopButtonChanged();
@@ -50,7 +58,9 @@ private:
     double getCurrentPositionTransportSources();
     
     //==========================================================================
-    juce::TextButton openButton;
+    LibraryWindow libraryModal;
+    TrackLibrary library;
+    juce::TextButton libraryButton;
     juce::TextButton playButton;
     juce::TextButton stopButton;
     juce::ToggleButton loopingToggle;

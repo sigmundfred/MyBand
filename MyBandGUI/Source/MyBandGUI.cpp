@@ -9,37 +9,34 @@
 */
 
 #include "MyBandGUI.h"
+#include "../../Common/BandMessage.h"
 
 MyBandGUI::MyBandGUI()
         : state (Stopped)
     {
-        
-        addAndMakeVisible (&openButton);
-        openButton.setButtonText ("Open...");
-        openButton.onClick = [this] { openButtonClicked(); };
+        addAndMakeVisible (&libraryButton);
+        libraryButton.setButtonText ("Add...");
+        libraryButton.onClick = [this] { libraryButtonClicked(); };
 
-        addAndMakeVisible (&playButton);
+        //addAndMakeVisible (&playButton);
         playButton.setButtonText ("Play");
         playButton.onClick = [this] { playButtonClicked(); };
         playButton.setColour (juce::TextButton::buttonColourId, juce::Colours::green);
         playButton.setEnabled (false);
 
-        addAndMakeVisible (&stopButton);
+        //addAndMakeVisible (&stopButton);
         stopButton.setButtonText ("Stop");
         stopButton.onClick = [this] { stopButtonClicked(); };
         stopButton.setColour (juce::TextButton::buttonColourId, juce::Colours::red);
         stopButton.setEnabled (false);
 
-        addAndMakeVisible (&loopingToggle);
+        //addAndMakeVisible (&loopingToggle);
         loopingToggle.setButtonText ("Loop");
         loopingToggle.onClick = [this] { loopButtonChanged(); };
 
-        addAndMakeVisible (&currentPositionLabel);
+        //addAndMakeVisible (&currentPositionLabel);
         currentPositionLabel.setText ("Stopped", juce::dontSendNotification);
-        addAndMakeVisible (&song1);
-        song1.setText("None", juce::dontSendNotification);
-        addAndMakeVisible (&song2);
-        song2.setText("None", juce::dontSendNotification);
+        
 
         setSize (640, 480);
 
@@ -78,7 +75,8 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 
     void MyBandGUI::resized()
     {
-        openButton          .setBounds (10, 10,  getWidth() - 20, 20);
+        //table         .setBounds (10, 10,  getWidth() - 20, 100);
+        libraryButton       .setBounds (10, 10,  getWidth() - 20, 20);
         playButton          .setBounds (10, 40,  getWidth() - 20, 20);
         stopButton          .setBounds (10, 70,  getWidth() - 20, 20);
         loopingToggle       .setBounds (10, 100, getWidth() - 20, 20);
@@ -157,8 +155,10 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
         }
     }
 
-    void MyBandGUI::openButtonClicked()
+    void MyBandGUI::libraryButtonClicked()
     {
+        libraryModal.Show();
+        /*
         chooser = std::make_unique<juce::FileChooser> ("Select a Wave file to play...",
                                                        juce::File{},
                                                        "*.wav");
@@ -191,7 +191,7 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
             }
             playButton.setEnabled (true); // verifier taille liste d'abord
             
-            /*
+            
             if (file != juce::File{})
             {
                 auto* reader = formatManager.createReaderFor (file);
@@ -204,8 +204,8 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
                     playButton.setEnabled (true);
                     readerSource.reset (newSource.release());
                 }
-            }*/
-        });
+            }
+        });*/
     }
 
     void MyBandGUI::playButtonClicked()
@@ -286,3 +286,46 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
         
         return 0;
     }
+
+    // heritage InterporcessConnection
+    void MyBandGUI::connectionMade()
+    {
+        juce::Logger::writeToLog("Connected to unit");
+        
+    }
+
+    void MyBandGUI::connectionLost()
+    {
+        juce::Logger::writeToLog("Disconnected from unit");
+    }
+
+    void MyBandGUI::messageReceived (const MemoryBlock &message)
+    {
+        juce::Logger::writeToLog("Message received");
+        BandMessage* _message = new BandMessage(new MemoryBlock(message));
+        
+        if (_message->getType() == REQUEST )
+        {
+            juce::Logger::writeToLog("type: REQUEST");
+            
+        }
+        else
+        {
+            juce::Logger::writeToLog("type: NOTFICATION");
+            switch(_message->getSection())
+            {
+                case LIBRARY:
+                    library.LoadLibrary(_message->getContent());
+                    juce::Logger::writeToLog(_message->getContent());
+                    break;
+                default:
+                    break;
+            }
+        }
+                
+    }
+
+void MyBandGUI::ConnectToUnit(const String &hostName, int portNumber, int timeOutMillisecs){
+    connectToSocket(hostName, portNumber, timeOutMillisecs);
+}
+

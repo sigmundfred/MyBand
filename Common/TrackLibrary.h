@@ -67,12 +67,14 @@ class TrackLibrary
         };
     
         void LoadLibrary(File *file);
+        void LoadLibrary(String json);
         void AddTrack(Track _track);
         void RemoveTrack(int id);
         void SaveLibray();
         String Serialize();
     
     private:
+        void LibraryFromJSON(var json);
         const String libraryFile = "./tracks.cfg";
         OwnedArray<Track> tracks;
     

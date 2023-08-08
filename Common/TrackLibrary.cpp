@@ -36,7 +36,21 @@ void TrackLibrary::LoadLibrary(File *file)
 {
     juce::var parsedJson = juce::JSON::parse(*file);
         
-    if (auto tracksArray = parsedJson.getProperty("tracks", var()).getArray())
+    LibraryFromJSON(parsedJson);
+    
+}
+
+void TrackLibrary::LoadLibrary(String json)
+{
+    juce::var parsedJson = juce::JSON::parse(json);
+        
+    LibraryFromJSON(parsedJson);
+    
+}
+
+void TrackLibrary::LibraryFromJSON(juce::var json)
+{
+    if (auto tracksArray = json.getProperty("tracks", var()).getArray())
     {
         for (auto& track : *tracksArray)
         {
@@ -48,7 +62,6 @@ void TrackLibrary::LoadLibrary(File *file)
             tracks.add(_track);
         }
     }
-    
 }
 
 void TrackLibrary::SaveLibray()

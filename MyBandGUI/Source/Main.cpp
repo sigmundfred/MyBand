@@ -10,7 +10,7 @@
 #include "MyBandGUI.h"
 #include "Monitor.h"
 #include "ZeroConfManager.h"
-#include "../../Common/BandMessage.h"
+
 
 //==============================================================================
 /*
@@ -32,7 +32,7 @@ int main (int argc, char* argv[])
 
 
 
-class Application    : public juce::JUCEApplication, public ZeroConfListener, public InterprocessConnection
+class Application    : public juce::JUCEApplication, public ZeroConfListener
 {
 public:
     //==============================================================================
@@ -44,7 +44,7 @@ public:
     void initialise (const juce::String&) override
     {
         startZeroconf();
-        mainWindow.reset (new MainWindow ("MyBand", new MyBandGUI, *this));
+        mainWindow.reset (new MainWindow ("MyBand", &gui, *this));
     }
 
     void shutdown() override
@@ -77,46 +77,10 @@ public:
             juce::String status = service->status == ZeroConfService::ResultStatus::queryResult ? "final" : "unfinished";
             juce::Logger::writeToLog(juce::String::formatted("Found service %s %s %s:%d %s",service->getRegType().toRawUTF8(), service->getServiceName().toRawUTF8(),service->ip.toRawUTF8(), service->getPort(), status.toRawUTF8() ));
             
-            connectToSocket(service->ip.toRawUTF8(), service->getPort(), 3000);
+            gui.ConnectToUnit(service->ip.toRawUTF8(), service->getPort(), 3000);
         }
     };
     
-    // heritage InterporcessConnection
-    void connectionMade() override
-    {
-        juce::Logger::writeToLog("Connected to unit");
-        
-    }
-    
-    void connectionLost() override
-    {
-        juce::Logger::writeToLog("Disconnected from unit");
-    }
-
-    void messageReceived (const MemoryBlock &message) override
-    {
-        juce::Logger::writeToLog("Message received");
-        BandMessage* _message = new BandMessage(new MemoryBlock(message));
-        
-        if (_message->getType() == REQUEST )
-        {
-            juce::Logger::writeToLog("type: REQUEST");
-            
-        }
-        else
-        {
-            juce::Logger::writeToLog("type: NOTFICATION");
-            switch(_message->getSection())
-            {
-                case LIBRARY:
-                    juce::Logger::writeToLog(_message->getContent());
-                    break;
-                default:
-                    break;
-            }
-        }
-                
-    }
     
 private:
     class MainWindow    : public juce::DocumentWindow
@@ -185,6 +149,7 @@ private:
     Monitor monitor;
     std::unique_ptr<ZeroConfManager> zeroConfManager;
     std::unique_ptr<ZeroConfService> service;
+    MyBandGUI gui;
     
 };
 
