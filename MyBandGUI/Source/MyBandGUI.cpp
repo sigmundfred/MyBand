@@ -14,6 +14,15 @@
 MyBandGUI::MyBandGUI()
         : state (Stopped)
     {
+        //libraryModal = new LibraryWindow(&library);
+        
+        refreshList();
+        listTracks.setTextWhenNothingSelected ("Choisissez un moreceau ...");
+        listTracks.onChange = ([this]{
+            juce::Logger::writeToLog(String(listTracks.getSelectedId()));
+        });
+        addAndMakeVisible(listTracks);
+        
         addAndMakeVisible (&libraryButton);
         libraryButton.setButtonText ("Add...");
         libraryButton.onClick = [this] { libraryButtonClicked(); };
@@ -40,11 +49,11 @@ MyBandGUI::MyBandGUI()
 
         setSize (640, 480);
 
-        formatManager.registerBasicFormats();
+        //formatManager.registerBasicFormats();
         //transportSource.addChangeListener (this);
 
-        setAudioChannels (2, 2);
-        startTimer (20);
+        //setAudioChannels (2, 2);
+        //startTimer (20);
     }
 
 MyBandGUI::~MyBandGUI()
@@ -76,7 +85,8 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
     void MyBandGUI::resized()
     {
         //table         .setBounds (10, 10,  getWidth() - 20, 100);
-        libraryButton       .setBounds (10, 10,  getWidth() - 20, 20);
+        listTracks.setBounds (10, 10,  getWidth() - 20, 20);
+        //libraryButton       .setBounds (10, 10,  getWidth() - 20, 20);
         playButton          .setBounds (10, 40,  getWidth() - 20, 20);
         stopButton          .setBounds (10, 70,  getWidth() - 20, 20);
         loopingToggle       .setBounds (10, 100, getWidth() - 20, 20);
@@ -157,7 +167,7 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 
     void MyBandGUI::libraryButtonClicked()
     {
-        libraryModal.Show();
+        //libraryModal->Show();
         /*
         chooser = std::make_unique<juce::FileChooser> ("Select a Wave file to play...",
                                                        juce::File{},
@@ -287,6 +297,17 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
         return 0;
     }
 
+//Combobox tracks
+void MyBandGUI::refreshList()
+{
+    listTracks.clear();
+    for(int i =0;i<library.getSize();i++)
+    {
+        const String text = String(i) + " - " + library.getTrack(i)->getTitle() + " - " + library.getTrack(i)->getAuthor();
+        listTracks.addItem(text, i+1);
+    }
+}
+
     // heritage InterporcessConnection
     void MyBandGUI::connectionMade()
     {
@@ -314,12 +335,14 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
             juce::Logger::writeToLog("type: NOTFICATION");
             switch(_message->getSection())
             {
+            
                 case LIBRARY:
-                    library.LoadLibrary(_message->getContent());
+                    String _content = _message->getContent();
+                    library.LoadLibrary(&_content);
+                    refreshList();
                     juce::Logger::writeToLog(_message->getContent());
                     break;
-                default:
-                    break;
+
             }
         }
                 

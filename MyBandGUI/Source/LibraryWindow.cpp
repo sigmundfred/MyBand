@@ -10,25 +10,35 @@
 
 #include "LibraryWindow.h"
 
-LibraryWindow::LibraryWindow() : DialogWindow("Library", Colours::lightgrey, true)
+LibraryWindow::LibraryWindow(TrackLibrary *_tracks) : AlertWindow("test", "gestion de la librairie", MessageBoxIconType::NoIcon)
 {
+    tracks = _tracks;
+    
     table.setModel(this);
     table.setColour (ListBox::outlineColourId, Colours::grey);
     table.setOutlineThickness (1);
-    table.setMultipleSelectionEnabled (true);
+    table.setMultipleSelectionEnabled (false);
+    table.setBounds(0, 0, 150, 150);
     
     table.getHeader().addColumn("Id", 1, 50, 30);
     table.getHeader().addColumn("Title", 2, 50, 30);
     table.getHeader().addColumn("Author", 3, 50, 30);
 
+    /*
     options.content.setOwned (&table);
-    options.content->setSize(400, 400);
+    options.content->setSize(400, 600);
 
     options.dialogTitle                   = "Dialog Window";
     options.dialogBackgroundColour        = Colour (0xff0e345a);
     options.escapeKeyTriggersCloseButton  = true;
-    options.useNativeTitleBar             = false;
+    options.useNativeTitleBar             = true;
     options.resizable                     = true;
+    */
+    
+    //options.content.setOwned(&selectButton);
+    
+    addCustomComponent(&table);
+    addButton("Select", 1);
 }
 
 LibraryWindow::~LibraryWindow()
@@ -38,17 +48,29 @@ LibraryWindow::~LibraryWindow()
 
 void LibraryWindow::Show()
 {
-    options.launchAsync();
-    centreWithSize (300, 200);
+    //centreWithSize (600, 600);
+    //options.launchAsync();
+    table.repaint();
+    enterModalState(true,nullptr,true);
 }
+
+/*
+bool LibraryWindow::escapeKeyPressed()
+{
+    //tracks = NULL;
+    juce::JUCEApplication::getInstance()->systemRequestedQuit();
+ 
+    return true;
+}*/
 
 int LibraryWindow::getNumRows()
 {
-    return numRows;
+    return tracks->getSize();
 }
 
 void LibraryWindow::paintRowBackground (Graphics& g, int rowNumber, int /*width*/, int /*height*/, bool rowIsSelected)
 {
+    juce::Logger::writeToLog("paintRowbackground");
     auto alternateColour = getLookAndFeel().findColour (ListBox::backgroundColourId)
                                            .interpolatedWith (getLookAndFeel().findColour (ListBox::textColourId), 0.03f);
     if (rowIsSelected)
@@ -60,9 +82,16 @@ void LibraryWindow::paintRowBackground (Graphics& g, int rowNumber, int /*width*
 void LibraryWindow::paintCell (Graphics& g, int rowNumber, int columnId,
                 int width, int height, bool /*rowIsSelected*/)
 {
+    juce::Logger::writeToLog("paintCell");
     g.setColour (getLookAndFeel().findColour (ListBox::textColourId));
     //g.setFont (font);
 
+    if (rowNumber <= tracks->getSize())
+    {
+        String text = getText(columnId, rowNumber);
+
+        g.drawText (text, 2, 0, width - 4, height, Justification::centredLeft, true);
+    }
     /*
     if (auto* rowElement = dataList->getChildElement (rowNumber))
     {
@@ -130,4 +159,9 @@ int LibraryWindow::getColumnAutoSizeWidth (int columnId)
     }
 
     return widest + 8;
+}
+
+void LibraryWindow::selectButtonClicked()
+{
+    ;
 }

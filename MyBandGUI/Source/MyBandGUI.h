@@ -57,9 +57,12 @@ private:
     bool isOneSourcePlaying();
     double getCurrentPositionTransportSources();
     
+    void refreshList();
+    
     //==========================================================================
-    LibraryWindow libraryModal;
+    LibraryWindow* libraryModal;
     TrackLibrary library;
+    ComboBox listTracks;
     juce::TextButton libraryButton;
     juce::TextButton playButton;
     juce::TextButton stopButton;

@@ -67,10 +67,12 @@ class TrackLibrary
         };
     
         void LoadLibrary(File *file);
-        void LoadLibrary(String json);
+        void LoadLibrary(String *json);
         void AddTrack(Track _track);
+        Track* getTrack(int id);
         void RemoveTrack(int id);
         void SaveLibray();
+        int getSize();
         String Serialize();
     
     private:

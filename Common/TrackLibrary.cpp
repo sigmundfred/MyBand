@@ -40,12 +40,11 @@ void TrackLibrary::LoadLibrary(File *file)
     
 }
 
-void TrackLibrary::LoadLibrary(String json)
+void TrackLibrary::LoadLibrary(String* json)
 {
-    juce::var parsedJson = juce::JSON::parse(json);
-        
-    LibraryFromJSON(parsedJson);
+    juce::var parsedJson = juce::JSON::parse(*json);
     
+    LibraryFromJSON(parsedJson);
 }
 
 void TrackLibrary::LibraryFromJSON(juce::var json)
@@ -96,15 +95,28 @@ String TrackLibrary::Serialize(){
     {
         if (!first)
             response += ",";
-        response += "{'title':'"+track->getTitle()+"',"+
-        "'path':'"+track->getPath()+"',"+
-        "'url':'"+track->getUrl()+
-        "','author':'"+track->getAuthor()+"'}";
+        response += "{\"title\":\""+track->getTitle()+"\","+
+        "\"path\":\""+track->getPath()+"\","+
+        "\"url\":\""+track->getUrl()+
+        "\",\"author\":\""+track->getAuthor()+"\"}";
         
         first = false;
     }
     
-    response = "{ 'tracks' : [" + response + "]}";
+    response = "{\"tracks\":[" + response + "]}";
     
     return response;
+    //return "{\"version\":\"test\",\"tracks\":[{\"title\":\"test\",\"url\":\"test\",\"path\":\"library/1\",\"author\":\"test\"}]}";
 }
+
+int TrackLibrary::getSize(){
+    if(tracks.isEmpty())
+        return 0;
+    
+    return tracks.size();
+}
+
+TrackLibrary::Track* TrackLibrary::getTrack(int id){
+    return tracks[id];
+}
+

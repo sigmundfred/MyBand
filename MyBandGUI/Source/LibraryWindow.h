@@ -10,14 +10,16 @@
 
 #pragma once
 #include <JuceHeader.h>
+#include "../../Common/TrackLibrary.h"
 
-class LibraryWindow : public DialogWindow, public TableListBoxModel
+class LibraryWindow : public AlertWindow, public TableListBoxModel
 {
 public:
-    LibraryWindow();
+    LibraryWindow(TrackLibrary *tracks);
     ~LibraryWindow();
     
     void Show();
+    //bool escapeKeyPressed() override;
     int getNumRows() override;
     void paintRowBackground (Graphics& g, int rowNumber, int /*width*/, int /*height*/, bool rowIsSelected) override;
     void paintCell (Graphics& g, int rowNumber, int columnId, int width, int height, bool /*rowIsSelected*/) override;
@@ -25,10 +27,26 @@ public:
     Component* refreshComponentForCell (int rowNumber, int columnId, bool /*isRowSelected*/,
                                         Component* existingComponentToUpdate) override;
     int getColumnAutoSizeWidth (int columnId) override;
+    void selectButtonClicked();
     
     String getText (const int columnNumber, const int rowNumber) const
     {
-        //return dataList->getChildElement (rowNumber)->getStringAttribute ( getAttributeNameForColumnId(columnNumber));
+        juce::Logger::writeToLog("getText");
+        String text = "";
+        switch (columnNumber)
+        {
+            case 1:
+                text += rowNumber;
+                break;
+            case 2:
+                text = tracks->getTrack(rowNumber)->getTitle();
+                break;
+            case 3:
+                text = tracks->getTrack(rowNumber)->getAuthor();
+                break;
+        }
+        
+        return text;
     }
 
     void setText (const int columnNumber, const int rowNumber, const String& newText)
@@ -39,7 +57,9 @@ public:
     
 private:
     TableListBox table;
-    DialogWindow::LaunchOptions options;
+    juce::TextButton selectButton;
+    TrackLibrary* tracks;
+    //DialogWindow::LaunchOptions options;
     int numRows;
     
     //==============================================================================
