@@ -248,7 +248,9 @@ void MyBandUnit::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
         message->append(header, 1);
         message->append(header+1, 1);
         message->append(header+2, 1);
-        message->append(library.Serialize().toUTF8(), library.Serialize().length());
+        String _content = library.Serialize();
+        juce::Logger::writeToLog(_content+" : "+String(_content.length()));
+        message->append(_content.toUTF8(), _content.length()+2); // +2 nécessaire pour transmettre la fin de la chaine. ???
         
         sendMessage(*message);
     }

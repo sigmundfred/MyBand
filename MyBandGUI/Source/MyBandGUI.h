@@ -10,8 +10,9 @@
 
 #pragma once
 #include "JuceHeader.h"
-#include "LibraryWindow.h"
 #include "../../Common/TrackLibrary.h"
+#include "Stage.h"
+
 using namespace juce;
 
 //==============================================================================
@@ -21,6 +22,7 @@ public:
     MyBandGUI();
     ~MyBandGUI() override;
 
+    void selectTrack(int id);
     void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override;
     void getNextAudioBlock (const juce::AudioSourceChannelInfo& bufferToFill) override;
     void releaseResources() override;
@@ -60,12 +62,13 @@ private:
     void refreshList();
     
     //==========================================================================
-    LibraryWindow* libraryModal;
+    //LibraryWindow* libraryModal;
     TrackLibrary library;
     ComboBox listTracks;
     juce::TextButton libraryButton;
-    juce::TextButton playButton;
-    juce::TextButton stopButton;
+    juce::TextButton addButton;
+    juce::TextButton infoButton;
+    Stage stage;
     juce::ToggleButton loopingToggle;
     juce::Label currentPositionLabel;
     juce::Label song1;

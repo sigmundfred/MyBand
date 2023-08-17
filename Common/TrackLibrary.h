@@ -10,6 +10,7 @@
 
 #pragma once
 #include "JuceHeader.h"
+#include "Musician.h"
 
 using namespace juce;
 
@@ -58,12 +59,30 @@ class TrackLibrary
             String getAuthor(){
                 return author;
             }
+            
+            void addMusician(Musician *musician)
+            {
+                musicians.add(musician);
+            }
+            
+            Musician* getMusician(int i)
+            {
+                return musicians[i];
+            }
+            
+            int getNbMusicians()
+            {
+                return musicians.size();
+            }
                 
             private:
                 String title;
                 String path;
                 String url;
                 String author;
+                OwnedArray<Musician> musicians;
+            
+            JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Track)
         };
     
         void LoadLibrary(File *file);
@@ -74,10 +93,12 @@ class TrackLibrary
         void SaveLibray();
         int getSize();
         String Serialize();
+        
     
     private:
         void LibraryFromJSON(var json);
         const String libraryFile = "./tracks.cfg";
         OwnedArray<Track> tracks;
     
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackLibrary)
 };

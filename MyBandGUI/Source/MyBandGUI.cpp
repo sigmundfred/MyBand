@@ -14,31 +14,29 @@
 MyBandGUI::MyBandGUI()
         : state (Stopped)
     {
-        //libraryModal = new LibraryWindow(&library);
-        
         refreshList();
         listTracks.setTextWhenNothingSelected ("Choisissez un moreceau ...");
         listTracks.onChange = ([this]{
             juce::Logger::writeToLog(String(listTracks.getSelectedId()));
+            selectTrack(listTracks.getSelectedId()-1);
         });
         addAndMakeVisible(listTracks);
         
-        addAndMakeVisible (&libraryButton);
-        libraryButton.setButtonText ("Add...");
-        libraryButton.onClick = [this] { libraryButtonClicked(); };
 
-        //addAndMakeVisible (&playButton);
-        playButton.setButtonText ("Play");
-        playButton.onClick = [this] { playButtonClicked(); };
-        playButton.setColour (juce::TextButton::buttonColourId, juce::Colours::green);
-        playButton.setEnabled (false);
 
-        //addAndMakeVisible (&stopButton);
-        stopButton.setButtonText ("Stop");
-        stopButton.onClick = [this] { stopButtonClicked(); };
-        stopButton.setColour (juce::TextButton::buttonColourId, juce::Colours::red);
-        stopButton.setEnabled (false);
+        addAndMakeVisible (&addButton);
+        addButton.setButtonText ("+");
+        addButton.onClick = [this] { playButtonClicked(); };
+        addButton.setEnabled (true);
 
+        addAndMakeVisible (&infoButton);
+        infoButton.setButtonText ("i");
+        infoButton.onClick = [this] { stopButtonClicked(); };
+        infoButton.setEnabled (false);
+
+        addAndMakeVisible (&stage);
+        
+        
         //addAndMakeVisible (&loopingToggle);
         loopingToggle.setButtonText ("Loop");
         loopingToggle.onClick = [this] { loopButtonChanged(); };
@@ -47,7 +45,7 @@ MyBandGUI::MyBandGUI()
         currentPositionLabel.setText ("Stopped", juce::dontSendNotification);
         
 
-        setSize (640, 480);
+        setSize (844, 390);
 
         //formatManager.registerBasicFormats();
         //transportSource.addChangeListener (this);
@@ -58,7 +56,13 @@ MyBandGUI::MyBandGUI()
 
 MyBandGUI::~MyBandGUI()
 {
-        shutdownAudio();
+        //shutdownAudio();
+}
+
+
+void MyBandGUI::selectTrack (int id)
+{
+    stage.refreshTrack(library.getTrack(id));
 }
 
 void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
@@ -84,12 +88,10 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 
     void MyBandGUI::resized()
     {
-        //table         .setBounds (10, 10,  getWidth() - 20, 100);
-        listTracks.setBounds (10, 10,  getWidth() - 20, 20);
-        //libraryButton       .setBounds (10, 10,  getWidth() - 20, 20);
-        playButton          .setBounds (10, 40,  getWidth() - 20, 20);
-        stopButton          .setBounds (10, 70,  getWidth() - 20, 20);
-        loopingToggle       .setBounds (10, 100, getWidth() - 20, 20);
+        listTracks.setBounds (10, 10,  getWidth() - 90, 20);
+        infoButton          .setBounds (getWidth() - 70, 10,  20, 20);
+        addButton          .setBounds (getWidth() - 40, 10,  20, 20);
+        stage       .setBounds (0, 50, 844, 340);
         currentPositionLabel.setBounds (10, 130, getWidth() - 20, 20);
     }
 
@@ -144,18 +146,18 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
             switch (state)
             {
                 case Stopped:
-                    stopButton.setEnabled (false);
-                    playButton.setEnabled (true);
+                    //stopButton.setEnabled (false);
+                    //playButton.setEnabled (true);
                     setPositionTransportSources(0.0);
                     break;
 
                 case Starting:
-                    playButton.setEnabled (false);
+                    //playButton.setEnabled (false);
                     start();
                     break;
 
                 case Playing:
-                    stopButton.setEnabled (true);
+                    //stopButton.setEnabled (true);
                     break;
 
                 case Stopping:
@@ -303,7 +305,7 @@ void MyBandGUI::refreshList()
     listTracks.clear();
     for(int i =0;i<library.getSize();i++)
     {
-        const String text = String(i) + " - " + library.getTrack(i)->getTitle() + " - " + library.getTrack(i)->getAuthor();
+        const String text = String((i+1)) + " - " + library.getTrack(i)->getTitle() + " - " + library.getTrack(i)->getAuthor();
         listTracks.addItem(text, i+1);
     }
 }
