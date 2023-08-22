@@ -39,6 +39,11 @@ MyBandGUI::MyBandGUI()
     playButton.onClick = [this] { playButtonClicked(); };
     playButton.setEnabled(true);
     
+    addAndMakeVisible(stopButton);
+    stopButton.setButtonText("stop");
+    stopButton.onClick = [this] { stopButtonClicked(); };
+    stopButton.setEnabled(false);
+    
     //addAndMakeVisible (&loopingToggle);
     //loopingToggle.setButtonText ("Loop");
     //loopingToggle.onClick = [this] { loopButtonChanged(); };
@@ -116,6 +121,7 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
         addButton          .setBounds (getWidth() - 40, 10,  20, 20);
         stage       .setBounds (0, 50, 844, 300);
         playButton.setBounds(20,350, 20, 20);
+        stopButton.setBounds(50,350, 20, 20);
         //currentPositionLabel.setBounds (10, 130, getWidth() - 20, 20);
     }
 
@@ -170,18 +176,18 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
             switch (state)
             {
                 case Stopped:
-                    //stopButton.setEnabled (false);
-                    //playButton.setEnabled (true);
+                    stopButton.setEnabled (false);
+                    playButton.setEnabled (true);
                     setPositionTransportSources(0.0);
                     break;
 
                 case Starting:
-                    //playButton.setEnabled (false);
+                    playButton.setEnabled (false);
                     start();
                     break;
 
                 case Playing:
-                    //stopButton.setEnabled (true);
+                    stopButton.setEnabled (true);
                     break;
 
                 case Stopping:
@@ -256,6 +262,9 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
     void MyBandGUI::stopButtonClicked()
     {
         changeState (Stopping);
+        BandMessage* _message = new BandMessage(REQUEST, PLAYER, 0x02);
+        
+        sendMessage(*_message->getRawMsg());
     }
 
     void MyBandGUI::loopButtonChanged()
@@ -352,6 +361,9 @@ void MyBandGUI::refreshList()
     void MyBandGUI::connectionLost()
     {
         juce::Logger::writeToLog("Disconnected from unit");
+        
+        // nettoyage des contextes
+        listTracks.clear();
     }
 
     void MyBandGUI::messageReceived (const MemoryBlock &message)
@@ -371,12 +383,30 @@ void MyBandGUI::refreshList()
             {
             
                 case LIBRARY:
+                {
                     String _content = _message->getContent();
                     library.LoadLibrary(&_content);
                     refreshList();
                     juce::Logger::writeToLog(_message->getContent());
                     break;
-
+                }
+                case PLAYER:
+                {
+                    String _content = _message->getContent();
+                    switch (_content.getHexValue32()) {
+                        case 1:
+                            changeState(Playing);
+                            break;
+                            
+                        case 2:
+                            changeState(Stopped);
+                            break;
+                            
+                        default:
+                            break;
+                    }
+                }
+                    
             }
         }
                 

@@ -104,16 +104,24 @@ void MyBandUnit::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
             switch (state)
             {
                 case Stopped:
+                {
                     setPositionTransportSources(0.0);
+                    BandMessage* _message = new BandMessage(NOTIFICATION, PLAYER, 0x00);
+                    _message->addContent(String(0x02));
+                    sendMessage(*_message->getRawMsg());
                     break;
-
+                }
                 case Starting:
                     start();
                     break;
 
                 case Playing:
+                {
+                    BandMessage* _message = new BandMessage(NOTIFICATION, PLAYER, 0x00);
+                    _message->addContent(String(0x01));
+                    sendMessage(*_message->getRawMsg());
                     break;
-
+                }
                 case Stopping:
                     stopTransportSources();
                     break;
@@ -384,6 +392,7 @@ void MyBandUnit::dispatchPlayerRequest(int _messageNb, String _content)
         }
         case 0x02: // stop/pause
         {
+            changeState(Stopping);
             break;
         }
     }

@@ -70,6 +70,7 @@ private:
     juce::TextButton addButton;
     juce::TextButton infoButton;
     juce::TextButton playButton;
+    juce::TextButton stopButton;
     Stage stage;
     //juce::ToggleButton loopingToggle;
     juce::Label currentPositionLabel;
