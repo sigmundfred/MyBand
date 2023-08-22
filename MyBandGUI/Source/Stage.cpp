@@ -43,9 +43,9 @@ Stage::Stage ()
     //[/UserPreSize]
 
     //setSize (600, 400);
-    musicians.add(new MusicianComponent());
+    //musicians.add(new MusicianComponent());
     //musicians.getFirst()->setBounds(10, 10, 50, 100);
-    addAndMakeVisible(musicians.getFirst());
+    //addAndMakeVisible(musicians.getFirst());
 
 
     //[Constructor] You can add your own custom stuff here..
@@ -107,13 +107,29 @@ void Stage::refreshTrack(TrackLibrary::Track* _track)
     musicians.clear();
     for (int i=0;i<_track->getNbMusicians();i++)
     {
-        musicians.add(new MusicianComponent(_track->getMusician(i)));
+        musicians.add(new MusicianComponent(_track->getMusician(i),i));
         musicians.getLast()->setTopLeftPosition(musicians.getLast()->getWidth()*i+10, 10);
         //musicians.getLast()->setBounds(100*i+10, 10, 100, 300); // a remplacer apr des valeurs gloables
         addAndMakeVisible(musicians.getLast());
     }
     
 }
+
+void Stage::handleCommandMessage(int commandId)
+{
+    this->getParentComponent()->postCommandMessage(commandId);
+}
+
+bool Stage::getMusicianState(int id)
+{
+    return musicians[id]->isActivated();
+}
+
+int Stage::getNbMusicians()
+{
+    return musicians.size();
+}
+
 //[/MiscUserCode]
 
 

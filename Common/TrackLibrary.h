@@ -60,6 +60,7 @@ class TrackLibrary
                 return author;
             }
             
+            
             void addMusician(Musician *musician)
             {
                 musicians.add(musician);
@@ -68,6 +69,11 @@ class TrackLibrary
             Musician* getMusician(int i)
             {
                 return musicians[i];
+            }
+            
+            void setMusicianState(int id, bool _state)
+            {
+                musicians[id]->activate(_state);
             }
             
             int getNbMusicians()
@@ -91,14 +97,17 @@ class TrackLibrary
         Track* getTrack(int id);
         void RemoveTrack(int id);
         void SaveLibray();
+        void selectTrack(int id);
         int getSize();
         String Serialize();
+        TrackLibrary::Track* getSelectedTrack();
         
     
     private:
         void LibraryFromJSON(var json);
         const String libraryFile = "./tracks.cfg";
         OwnedArray<Track> tracks;
+        int selectedTrack = -1;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackLibrary)
 };

@@ -52,6 +52,11 @@ void TrackLibrary::LoadLibrary(String* json)
     LibraryFromJSON(parsedJson);
 }
 
+void TrackLibrary::selectTrack(int id)
+{
+    selectedTrack = id;
+}
+
 void TrackLibrary::LibraryFromJSON(juce::var json)
 {
     if (auto tracksArray = json.getProperty("tracks", var()).getArray())
@@ -147,5 +152,9 @@ int TrackLibrary::getSize(){
 
 TrackLibrary::Track* TrackLibrary::getTrack(int id){
     return tracks[id];
+}
+
+TrackLibrary::Track* TrackLibrary::getSelectedTrack(){
+    return tracks[selectedTrack];
 }
 

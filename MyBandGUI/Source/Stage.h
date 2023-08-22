@@ -51,7 +51,9 @@ public:
     void resized() override;
     
     void refreshTrack(TrackLibrary::Track* _track);
-
+    void handleCommandMessage(int commandId) override;
+    bool getMusicianState(int id);
+    int getNbMusicians();
 
 
 private:

@@ -9,6 +9,7 @@
 */
 
 #include "MyBandUnit.h"
+#include "../../Common/BandMessage.h"
 
 MyBandUnit::MyBandUnit()
         : state (Stopped)
@@ -56,7 +57,7 @@ void MyBandUnit::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 
     void MyBandUnit::changeListenerCallback (juce::ChangeBroadcaster* source)
     {
-        if (typeid(source) == typeid(juce::AudioTransportSource))
+        if (typeid(*source) == typeid(juce::AudioTransportSource))
         {
             if (isOneSourcePlaying())
                 changeState (Playing);
@@ -120,15 +121,18 @@ void MyBandUnit::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
         }
     }
 
-    void MyBandUnit::openButtonClicked()
+    void MyBandUnit::loadTransportSources()
     {
-            File* dir = new File(File::getCurrentWorkingDirectory().getChildFile("library/1"));
-            juce::Array<juce::File> list = dir->findChildFiles(2, false, "*.wav");
-            
-            for (int i=0; i<list.size(); i++)
+        TrackLibrary::Track* _currentTrack = library.getSelectedTrack();
+        transportSources.clear();
+        
+        for (int i=0;i<_currentTrack->getNbMusicians();i++)
+        {
+            if (_currentTrack->getMusician(i)->isActivated())
             {
-                auto file = list.getReference(i);
-                auto* reader = formatManager.createReaderFor(file);
+                File* file = new File(File::getCurrentWorkingDirectory().getChildFile(_currentTrack->getPath()+_currentTrack->getMusician(i)->getFileName()));
+                
+                auto* reader = formatManager.createReaderFor(*file);
                 
                 if (reader != nullptr)
                 {
@@ -142,22 +146,31 @@ void MyBandUnit::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
                     readerSources.add(newSource.release());
                 }
             }
+        }
+        
+        /*
+        File* dir = new File(File::getCurrentWorkingDirectory().getChildFile(_currentTrack->getPath()));
+        juce::Array<juce::File> list = dir->findChildFiles(2, false, "*.wav");
+        
+        for (int i=0; i<list.size(); i++)
+        {
+            auto file = list.getReference(i);
+            auto* reader = formatManager.createReaderFor(file);
             
-            /*
-            if (file != juce::File{})
+            if (reader != nullptr)
             {
-                auto* reader = formatManager.createReaderFor (file);
-
-                if (reader != nullptr)
-                {
-                    auto newSource = std::make_unique<juce::AudioFormatReaderSource> (reader, true);
-                    transportSource.setSource (newSource.get(), 0, nullptr, reader->sampleRate);
-                    mixSource.addInputSource(&transportSource, false);
-                    playButton.setEnabled (true);
-                    readerSource.reset (newSource.release());
-                }
-            }*/
+                auto newSource = std::make_unique<juce::AudioFormatReaderSource> (reader, true);
+                juce::AudioTransportSource* transportSource = new juce::AudioTransportSource();
+                transportSource->addChangeListener (this);
+                transportSource->setSource (newSource.get(), 0, nullptr, reader->sampleRate);
+                
+                transportSources.add(transportSource);
+                mixSource.addInputSource(transportSource, false);
+                readerSources.add(newSource.release());
+            }
+        }*/
     }
+
 
     void MyBandUnit::playButtonClicked()
     {
@@ -236,31 +249,142 @@ void MyBandUnit::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
         return 0;
     }
 
-    // heritage InterporcessConnection
-    void MyBandUnit::connectionMade()
-    {
-        juce::Logger::writeToLog("Connected to GUI");
-        
-        char header[3] = {0x01,0x02,0x01};
-        //String myString("Welcome");
-        //MemoryBlock *message = new MemoryBlock(myString.toUTF8(), myString.length());
-        MemoryBlock *message = new MemoryBlock();
-        message->append(header, 1);
-        message->append(header+1, 1);
-        message->append(header+2, 1);
-        String _content = library.Serialize();
-        juce::Logger::writeToLog(_content+" : "+String(_content.length()));
-        message->append(_content.toUTF8(), _content.length()+2); // +2 nécessaire pour transmettre la fin de la chaine. ???
-        
-        sendMessage(*message);
-    }
+    
 
-    void MyBandUnit::connectionLost()
-    {
-        juce::Logger::writeToLog("Disconnected from unit");
-    }
+//-----------------------------------------------------------------------------------------------------------
+// heritage InterprocessConnection
+//-----------------------------------------------------------------------------------------------------------
+void MyBandUnit::connectionMade()
+{
+    juce::Logger::writeToLog("Connected to GUI");
+    
+    char header[3] = {0x01,0x02,0x01};
 
-    void MyBandUnit::messageReceived (const juce::MemoryBlock &message)
+    MemoryBlock *message = new MemoryBlock();
+    message->append(header, 1);
+    message->append(header+1, 1);
+    message->append(header+2, 1);
+    String _content = library.Serialize();
+    juce::Logger::writeToLog(_content+" : "+String(_content.length()));
+    message->append(_content.toUTF8(), _content.length()+2); // +2 nécessaire pour transmettre la fin de la chaine. ???
+    
+    sendMessage(*message);
+}
+
+void MyBandUnit::connectionLost()
+{
+    juce::Logger::writeToLog("Disconnected from GUI");
+}
+
+void MyBandUnit::messageReceived (const juce::MemoryBlock &message)
+{
+    juce::Logger::writeToLog("Message received: "+String(message[0])+"/"+String(message[1])+"/"+String(message[2]));
+    BandMessage* _message = new BandMessage(new MemoryBlock(message));
+    
+    if (_message->getType() == REQUEST )
     {
-        juce::Logger::writeToLog("Message received");
+        juce::Logger::writeToLog("type: REQUEST");
+        switch (_message->getSection())
+        {
+            case 0x00:
+                dispatchAppRequest(_message->getMessageNumber(), _message->getContent());
+                break;
+            case 0x01:
+                dispatchGUIRequest(_message->getMessageNumber(), _message->getContent());
+                break;
+            case 0x02:
+                dispatchLibraryRequest(_message->getMessageNumber(), _message->getContent(),&library);
+                break;
+            case 0x03:
+                dispatchPlayerRequest(_message->getMessageNumber(), _message->getContent());
+                break;
+        }
+        
     }
+    
+}
+
+//-----------------------------------------------------------------------------------------------------------
+// heritage MessageDispatcher (TODO)
+//-----------------------------------------------------------------------------------------------------------
+void MyBandUnit::dispatchAppRequest(int _messageNb, String _content)
+{
+    
+}
+
+void MyBandUnit::dispatchGUIRequest(int _messageNb, String _content)
+{
+    
+}
+
+void MyBandUnit::dispatchLibraryRequest(int _messageNb, String _content,TrackLibrary* _library)
+{
+    double position = 0;
+    bool playing = (state == Playing)?true:false;
+    
+    switch (_messageNb)
+    {
+        case 0x01:
+            break;
+        case 0x02:
+            break;
+        case 0x03:
+            break;
+        case 0x04: // Selection d'un morceau
+        {
+            int id = _content.getHexValue32();
+            _library->selectTrack(id);
+            loadTransportSources();
+            // load transport sources
+            break;
+        }
+        case 0x05:
+            if (playing)
+            {
+                position = getCurrentPositionTransportSources();
+                stopTransportSources();
+            }
+            mixSource.removeAllInputs();
+            //releaseResources();
+            _library->getSelectedTrack()->setMusicianState(_content.getHexValue32(), true);
+            loadTransportSources();
+            if (playing)
+            {
+                setPositionTransportSources(position);
+                start();
+            }
+            break;
+        case 0x06:
+            if (playing)
+            {
+                position = getCurrentPositionTransportSources();
+                stopTransportSources();
+            }
+            mixSource.removeAllInputs();
+            //releaseResources();
+            _library->getSelectedTrack()->setMusicianState(_content.getHexValue32(), false);
+            loadTransportSources();
+            if (playing)
+            {
+                setPositionTransportSources(position);
+                start();
+            }
+            break;
+    }
+}
+
+void MyBandUnit::dispatchPlayerRequest(int _messageNb, String _content)
+{
+    switch (_messageNb)
+    {
+        case 0x01: // play
+        {
+            changeState (Starting);
+            break;
+        }
+        case 0x02: // stop/pause
+        {
+            break;
+        }
+    }
+}

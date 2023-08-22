@@ -27,7 +27,7 @@
 //[/MiscUserDefs]
 
 //==============================================================================
-MusicianComponent::MusicianComponent ()
+MusicianComponent::MusicianComponent (int _id) : Musician(), id(_id)
 {
     init();
 
@@ -35,11 +35,15 @@ MusicianComponent::MusicianComponent ()
 
 }
 
-MusicianComponent::MusicianComponent (Musician* _musician)
+MusicianComponent::MusicianComponent (Musician* _musician,int _id)
 {
     setType(_musician->getType());
     setFile(_musician->getFileName());
     setIconName(_musician->getIconName());
+    setEnabled(_musician->isActivated());
+    id = _id;
+    
+    isActivated()?juce::Logger::writeToLog("Enabled"):juce::Logger::writeToLog("not Enabled");
     
     init();
 }
@@ -61,9 +65,16 @@ void MusicianComponent::init()
 
     activation.reset (new juce::ToggleButton ("activation"));
     addAndMakeVisible (activation.get());
-    activation->setEnabled(isActivated());
+    //activation->setEnabled(isActivated());
+    activation->setToggleState(isActivated(), NotificationType::sendNotification);
     activation->setButtonText (juce::String());
-    activation->addListener (this);
+    activation->onClick = [this] {
+        isActivated()?activate(false):activate(true);
+        int command = id << 8;
+        if (isActivated()) command++;
+        this->getParentComponent()->postCommandMessage(command);
+    };
+    //activation->addListener (this);
 
     activation->setBounds (40, 280, 20, 20);
 
@@ -124,6 +135,7 @@ void MusicianComponent::resized()
     //[/UserResized]
 }
 
+
 void MusicianComponent::buttonClicked (juce::Button* buttonThatWasClicked)
 {
     //[UserbuttonClicked_Pre]
@@ -132,6 +144,7 @@ void MusicianComponent::buttonClicked (juce::Button* buttonThatWasClicked)
     if (buttonThatWasClicked == activation.get())
     {
         //[UserButtonCode_activation] -- add your button handler code here..
+        isActivated()?activate(false):activate(true);
         //[/UserButtonCode_activation]
     }
 

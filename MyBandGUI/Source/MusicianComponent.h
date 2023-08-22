@@ -40,8 +40,8 @@ class MusicianComponent  : public Musician,
 {
 public:
     //==============================================================================
-    MusicianComponent ();
-    MusicianComponent (Musician* _musician);
+    MusicianComponent (int _id);
+    MusicianComponent (Musician* _musician,int _id);
     ~MusicianComponent() override;
 
     //==============================================================================
@@ -64,6 +64,7 @@ private:
     //==============================================================================
     std::unique_ptr<juce::Label> name;
     std::unique_ptr<juce::ToggleButton> activation;
+    int id;
 
 
     //==============================================================================

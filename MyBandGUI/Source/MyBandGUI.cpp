@@ -13,46 +13,48 @@
 
 MyBandGUI::MyBandGUI()
         : state (Stopped)
-    {
-        refreshList();
-        listTracks.setTextWhenNothingSelected ("Choisissez un moreceau ...");
-        listTracks.onChange = ([this]{
-            juce::Logger::writeToLog(String(listTracks.getSelectedId()));
-            selectTrack(listTracks.getSelectedId()-1);
-        });
-        addAndMakeVisible(listTracks);
-        
+{
+    refreshList();
+    listTracks.setTextWhenNothingSelected ("Choisissez un moreceau ...");
+    listTracks.onChange = ([this]{
+        juce::Logger::writeToLog(String(listTracks.getSelectedId()));
+        selectTrack(listTracks.getSelectedId()-1);
+    });
+    addAndMakeVisible(listTracks);
+    
+    addAndMakeVisible (&addButton);
+    addButton.setButtonText ("+");
+    addButton.onClick = [this] {}; //playButtonClicked(); };
+    addButton.setEnabled (true);
 
+    addAndMakeVisible (&infoButton);
+    infoButton.setButtonText ("i");
+        infoButton.onClick = [this] {}; //stopButtonClicked(); };
+    infoButton.setEnabled (false);
 
-        addAndMakeVisible (&addButton);
-        addButton.setButtonText ("+");
-        addButton.onClick = [this] { playButtonClicked(); };
-        addButton.setEnabled (true);
+    addAndMakeVisible (&stage);
+    
+    addAndMakeVisible(playButton);
+    playButton.setButtonText("play");
+    playButton.onClick = [this] { playButtonClicked(); };
+    playButton.setEnabled(true);
+    
+    //addAndMakeVisible (&loopingToggle);
+    //loopingToggle.setButtonText ("Loop");
+    //loopingToggle.onClick = [this] { loopButtonChanged(); };
 
-        addAndMakeVisible (&infoButton);
-        infoButton.setButtonText ("i");
-        infoButton.onClick = [this] { stopButtonClicked(); };
-        infoButton.setEnabled (false);
+    //addAndMakeVisible (&currentPositionLabel);
+    currentPositionLabel.setText ("Stopped", juce::dontSendNotification);
+    
 
-        addAndMakeVisible (&stage);
-        
-        
-        //addAndMakeVisible (&loopingToggle);
-        loopingToggle.setButtonText ("Loop");
-        loopingToggle.onClick = [this] { loopButtonChanged(); };
+    setSize (844, 390);
 
-        //addAndMakeVisible (&currentPositionLabel);
-        currentPositionLabel.setText ("Stopped", juce::dontSendNotification);
-        
+    //formatManager.registerBasicFormats();
+    //transportSource.addChangeListener (this);
 
-        setSize (844, 390);
-
-        //formatManager.registerBasicFormats();
-        //transportSource.addChangeListener (this);
-
-        //setAudioChannels (2, 2);
-        //startTimer (20);
-    }
+    //setAudioChannels (2, 2);
+    //startTimer (20);
+}
 
 MyBandGUI::~MyBandGUI()
 {
@@ -63,11 +65,32 @@ MyBandGUI::~MyBandGUI()
 void MyBandGUI::selectTrack (int id)
 {
     stage.refreshTrack(library.getTrack(id));
+    
+    BandMessage* _message = new BandMessage(REQUEST, LIBRARY, 0x04);
+    _message->setContent(String(id));
+    
+    sendMessage(*_message->getRawMsg());
+    
+}
+
+void MyBandGUI::handleCommandMessage(int commandId)
+{
+    juce::Logger::writeToLog("Command:"+String(commandId));
+    juce::Logger::writeToLog("Command:"+String(commandId >>24));
+    juce::Logger::writeToLog("Id     :"+String( (commandId&0x00FFFF00) >>8));
+    juce::Logger::writeToLog("data   :"+String( commandId&0x00000001));
+    switch (commandId >> 24) {
+        case 0:
+            BandMessage* _message = new BandMessage(REQUEST, LIBRARY, stage.getMusicianState((commandId&0x00FFFF00)>>8)?0x05:0x06);
+            _message->addContent(String((commandId&0x00FFFF00)>>8));
+            sendMessage(*_message->getRawMsg());
+            break;
+    }
 }
 
 void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
-    mixSource.prepareToPlay (samplesPerBlockExpected, sampleRate);
+    //mixSource.prepareToPlay (samplesPerBlockExpected, sampleRate);
 }
 
     void MyBandGUI::getNextAudioBlock (const juce::AudioSourceChannelInfo& bufferToFill)
@@ -78,12 +101,12 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
             return;
         }
 
-        mixSource.getNextAudioBlock (bufferToFill);
+        //mixSource.getNextAudioBlock (bufferToFill);
     }
 
     void MyBandGUI::releaseResources()
     {
-        mixSource.releaseResources();
+        //mixSource.releaseResources();
     }
 
     void MyBandGUI::resized()
@@ -91,8 +114,9 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
         listTracks.setBounds (10, 10,  getWidth() - 90, 20);
         infoButton          .setBounds (getWidth() - 70, 10,  20, 20);
         addButton          .setBounds (getWidth() - 40, 10,  20, 20);
-        stage       .setBounds (0, 50, 844, 340);
-        currentPositionLabel.setBounds (10, 130, getWidth() - 20, 20);
+        stage       .setBounds (0, 50, 844, 300);
+        playButton.setBounds(20,350, 20, 20);
+        //currentPositionLabel.setBounds (10, 130, getWidth() - 20, 20);
     }
 
     void MyBandGUI::changeListenerCallback (juce::ChangeBroadcaster* source)
@@ -128,8 +152,8 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 
     void MyBandGUI::updateLoopState (bool shouldLoop)
     {
-        if (readerSource.get() != nullptr)
-            readerSource->setLooping (shouldLoop);
+        /*if (readerSource.get() != nullptr)
+            readerSource->setLooping (shouldLoop);*/
     }
     
     void MyBandGUI::start()
@@ -222,8 +246,11 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 
     void MyBandGUI::playButtonClicked()
     {
-        updateLoopState (loopingToggle.getToggleState());
+        //updateLoopState (loopingToggle.getToggleState());
         changeState (Starting);
+        BandMessage* _message = new BandMessage(REQUEST, PLAYER, 0x01);
+        
+        sendMessage(*_message->getRawMsg());
     }
 
     void MyBandGUI::stopButtonClicked()
@@ -233,7 +260,7 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 
     void MyBandGUI::loopButtonChanged()
     {
-        updateLoopState (loopingToggle.getToggleState());
+        //updateLoopState (loopingToggle.getToggleState());
     }
 
     bool MyBandGUI::checkReaderSources()
@@ -251,50 +278,55 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
     
     void MyBandGUI::stopTransportSources()
     {
+        /*
         for(int i=0; i<transportSources.size(); i++)
         {
             transportSources[i]->stop();
-        }
+        }*/
     }
     
     void MyBandGUI::startTransportSources()
     {
+        /*
         for(int i=0; i<transportSources.size(); i++)
         {
             transportSources[i]->start();
-        }
+        }*/
     }
     
     void MyBandGUI::setPositionTransportSources(double d)
     {
+        /*
         for(int i=0; i<transportSources.size(); i++)
         {
             transportSources[i]->setPosition(d);
-        }
+        }*/
     }
     
     bool MyBandGUI::isOneSourcePlaying()
     {
+        /*
         for(int i=0; i<transportSources.size(); i++)
         {
             if ( transportSources[i]->isPlaying())
             {
                 return true;
             }
-        }
+        }*/
         
         return false;
     }
     
     double MyBandGUI::getCurrentPositionTransportSources()
     {
+        /*
         for(int i=0; i<transportSources.size(); i++)
         {
             if ( transportSources[i]->isPlaying())
             {
                 return  transportSources[i]->getCurrentPosition();
             }
-        }
+        }*/
         
         return 0;
     }

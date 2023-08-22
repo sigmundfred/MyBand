@@ -58,6 +58,7 @@ private:
     void setPositionTransportSources(double d);
     bool isOneSourcePlaying();
     double getCurrentPositionTransportSources();
+    void handleCommandMessage(int commandId) override;
     
     void refreshList();
     
@@ -68,21 +69,22 @@ private:
     juce::TextButton libraryButton;
     juce::TextButton addButton;
     juce::TextButton infoButton;
+    juce::TextButton playButton;
     Stage stage;
-    juce::ToggleButton loopingToggle;
+    //juce::ToggleButton loopingToggle;
     juce::Label currentPositionLabel;
-    juce::Label song1;
-    juce::Label song2;
+    //juce::Label song1;
+    //juce::Label song2;
 
-    std::unique_ptr<juce::FileChooser> chooser;
+    //std::unique_ptr<juce::FileChooser> chooser;
 
-    juce::AudioFormatManager formatManager;
-    std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
-    std::unique_ptr<juce::AudioFormatReaderSource> readerSource2;
-    juce::OwnedArray<juce::AudioFormatReaderSource> readerSources = juce::OwnedArray<juce::AudioFormatReaderSource>();
-    juce::OwnedArray<juce::AudioTransportSource> transportSources = juce::OwnedArray<juce::AudioTransportSource>();
+    //juce::AudioFormatManager formatManager;
+    //std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
+    //std::unique_ptr<juce::AudioFormatReaderSource> readerSource2;
+    //juce::OwnedArray<juce::AudioFormatReaderSource> readerSources = juce::OwnedArray<juce::AudioFormatReaderSource>();
+    //juce::OwnedArray<juce::AudioTransportSource> transportSources = juce::OwnedArray<juce::AudioTransportSource>();
     //juce::AudioTransportSource transportSource2;
-    juce::MixerAudioSource mixSource;
+    //juce::MixerAudioSource mixSource;
     TransportState state;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MyBandGUI)

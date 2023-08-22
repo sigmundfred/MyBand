@@ -23,13 +23,17 @@ using namespace juce;
 class BandMessage {
 public:
     BandMessage();
+    BandMessage(int type,int section,int msgNumber);
     BandMessage(MemoryBlock* memory);
     ~BandMessage();
     
     int getType();
     int getSection();
     int getMessageNumber();
+    MemoryBlock* getRawMsg();
     String getContent();
+    void setContent(String _content);
+    void addContent(String _content);
     
 private:
     int type;

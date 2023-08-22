@@ -42,7 +42,7 @@ private:
     };
 
     void changeState (TransportState newState);
-    void openButtonClicked();
+    void loadTransportSources();
     void playButtonClicked();
     void stopButtonClicked();
     void loopButtonChanged();
@@ -52,6 +52,11 @@ private:
     void setPositionTransportSources(double d);
     bool isOneSourcePlaying();
     double getCurrentPositionTransportSources();
+    
+    void dispatchAppRequest(int _messageNb, String _content);
+    void dispatchGUIRequest(int _messageNb, String _content);
+    void dispatchLibraryRequest(int _messageNb, String _content, TrackLibrary* library);
+    void dispatchPlayerRequest(int _messageNb, String _content);
     
     //==========================================================================
     juce::AudioFormatManager formatManager;
