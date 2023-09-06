@@ -51,6 +51,7 @@ MusicianComponent::MusicianComponent (Musician* _musician,int _id)
 void MusicianComponent::init()
 {
     setOpaque (false);
+    setSize (130, 260);
     
     name.reset (new juce::Label ("name",
                                  TRANS("Musician")));
@@ -61,7 +62,7 @@ void MusicianComponent::init()
     name->setColour (juce::TextEditor::textColourId, juce::Colours::black);
     //name->setColour (juce::TextEditor::backgroundColourId, juce::Colour (0x00000000));
 
-    name->setBounds (10, 250, 80, 20);
+    name->setBounds (10, this->getHeight()-70, 80, 20);
 
     activation.reset (new juce::ToggleButton ("activation"));
     addAndMakeVisible (activation.get());
@@ -76,13 +77,11 @@ void MusicianComponent::init()
     };
     //activation->addListener (this);
 
-    activation->setBounds (40, 280, 20, 20);
+    activation->setBounds (40, this->getHeight()-30, 20, 20);
 
 
     //[UserPreSize]
     //[/UserPreSize]
-
-    setSize (100, 300);
 }
 
 MusicianComponent::MusicianComponent (juce::String _type,bool _activated) : Musician(_type,_activated)
@@ -111,7 +110,8 @@ MusicianComponent::~MusicianComponent()
 void MusicianComponent::paint (juce::Graphics& g)
 {
     //[UserPrePaint] Add your own custom painting code here..
-    g.drawImageAt(icon, 10, 10);
+    //g.drawImageAt(icon, 10, 10);
+    g.drawImage(icon,0,0,130,180,0,0,50,103);
     //[/UserPrePaint]
 
     //g.fillAll (juce::Colour (0xff323e44));

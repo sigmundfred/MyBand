@@ -52,6 +52,25 @@ void TrackLibrary::LoadLibrary(String* json)
     LibraryFromJSON(parsedJson);
 }
 
+void TrackLibrary::DownloadTrack(juce::URL _url)
+{
+    std::unique_ptr< InputStream >  urlStream = _url.createInputStream(URL::InputStreamOptions (URL::ParameterHandling::inAddress)
+                                                                       .withConnectionTimeoutMs (1000)
+                                                                       .withNumRedirectsToFollow (0));
+    juce::ZipFile zipFile (urlStream.get(), true);
+    if ( zipFile.uncompressTo(File("/library"),true).ok())
+    {
+        // ajout au fichier de config
+        Track* track = new Track();
+        tracks.add(track);
+        SaveLibray();
+        
+        // notification de GUI
+    }
+    
+
+}
+
 void TrackLibrary::selectTrack(int id)
 {
     selectedTrack = id;

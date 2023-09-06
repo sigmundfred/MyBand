@@ -78,12 +78,13 @@ void Stage::paint (juce::Graphics& g)
         //[/UserPaintCustomArguments]
         g.setGradientFill (juce::ColourGradient (fillColour1,
                                              static_cast<float> (proportionOfWidth (0.5309f)) - 0.0f + x,
-                                             static_cast<float> (proportionOfHeight (0.4720f)) - 0.0f + y,
+                                             static_cast<float> (proportionOfHeight (0.9f)) - 0.0f + y,
                                              fillColour2,
                                              static_cast<float> (proportionOfWidth (0.0988f)) - 0.0f + x,
                                              static_cast<float> (proportionOfHeight (0.1118f)) - 0.0f + y,
                                              true));
-        g.fillPath (internalPath1, juce::AffineTransform::translation(x, y));
+        //g.fillPath (internalPath1, juce::AffineTransform::translation(x, y));
+        g.fillAll();
     }
 
     //[UserPaint] Add your own custom painting code here..

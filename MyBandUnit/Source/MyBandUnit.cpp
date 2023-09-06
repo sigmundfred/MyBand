@@ -61,8 +61,10 @@ void MyBandUnit::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
         {
             if (isOneSourcePlaying())
                 changeState (Playing);
-            else
+            else if ((state == Stopping) || (state == Playing))
                 changeState (Stopped);
+            else if (Pausing == state)
+                changeState (Paused);
         }
     }
 
@@ -123,8 +125,17 @@ void MyBandUnit::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
                     break;
                 }
                 case Stopping:
+                case Pausing:
                     stopTransportSources();
                     break;
+                    
+                case Paused:
+                {
+                    BandMessage* _message = new BandMessage(NOTIFICATION, PLAYER, 0x00);
+                    _message->addContent(String(0x03));
+                    sendMessage(*_message->getRawMsg());
+                    break;
+                }
             }
         }
     }

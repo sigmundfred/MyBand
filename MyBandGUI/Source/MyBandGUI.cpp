@@ -15,7 +15,7 @@ MyBandGUI::MyBandGUI()
         : state (Stopped)
 {
     refreshList();
-    listTracks.setTextWhenNothingSelected ("Choisissez un moreceau ...");
+    listTracks.setTextWhenNothingSelected ("Choisissez un morceau ...");
     listTracks.onChange = ([this]{
         juce::Logger::writeToLog(String(listTracks.getSelectedId()));
         selectTrack(listTracks.getSelectedId()-1);
@@ -35,12 +35,12 @@ MyBandGUI::MyBandGUI()
     addAndMakeVisible (&stage);
     
     addAndMakeVisible(playButton);
-    playButton.setButtonText("play");
+    playButton.setButtonText(String(CharPointer_UTF8("\u25B6")));
     playButton.onClick = [this] { playButtonClicked(); };
     playButton.setEnabled(true);
     
     addAndMakeVisible(stopButton);
-    stopButton.setButtonText("stop");
+    stopButton.setButtonText(String(CharPointer_UTF8("\u25B0")));
     stopButton.onClick = [this] { stopButtonClicked(); };
     stopButton.setEnabled(false);
     
@@ -98,16 +98,16 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
     //mixSource.prepareToPlay (samplesPerBlockExpected, sampleRate);
 }
 
-    void MyBandGUI::getNextAudioBlock (const juce::AudioSourceChannelInfo& bufferToFill)
+void MyBandGUI::getNextAudioBlock (const juce::AudioSourceChannelInfo& bufferToFill)
+{
+    if (!checkReaderSources())
     {
-        if (!checkReaderSources())
-        {
-            bufferToFill.clearActiveBufferRegion();
-            return;
-        }
-
-        //mixSource.getNextAudioBlock (bufferToFill);
+        bufferToFill.clearActiveBufferRegion();
+        return;
     }
+
+    //mixSource.getNextAudioBlock (bufferToFill);
+}
 
     void MyBandGUI::releaseResources()
     {
@@ -120,8 +120,8 @@ void MyBandGUI::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
         infoButton          .setBounds (getWidth() - 70, 10,  20, 20);
         addButton          .setBounds (getWidth() - 40, 10,  20, 20);
         stage       .setBounds (0, 50, 844, 300);
-        playButton.setBounds(20,350, 20, 20);
-        stopButton.setBounds(50,350, 20, 20);
+        playButton.setBounds(20,350, 30, 30);
+        stopButton.setBounds(60,350, 30, 30);
         //currentPositionLabel.setBounds (10, 130, getWidth() - 20, 20);
     }
 

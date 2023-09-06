@@ -26,6 +26,11 @@ class TrackLibrary
             public:
             Track(){};
             Track(String name,String path){};
+            Track(File _jsonFile)
+            {
+                juce::var parsedJson = juce::JSON::parse(_jsonFile);
+                
+            }
             ~Track(){};
             
             void setTitle(String _title){
@@ -93,6 +98,7 @@ class TrackLibrary
     
         void LoadLibrary(File *file);
         void LoadLibrary(String *json);
+        void DownloadTrack(juce::URL _url);
         void AddTrack(Track _track);
         Track* getTrack(int id);
         void RemoveTrack(int id);
